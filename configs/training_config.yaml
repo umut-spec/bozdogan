@@ -1,0 +1,69 @@
+# Model Konfigürasyonu
+model_name: "Qwen/Qwen2.5-7B-Instruct"
+output_dir: "./models/qwen-turkish-chat"
+
+# LoRA Parametreleri
+lora:
+  r: 16                    # LoRA rank (8, 16, 32)
+  lora_alpha: 32          # Alpha değeri (genelde r*2)
+  lora_dropout: 0.05
+  target_modules:
+    - q_proj
+    - k_proj
+    - v_proj
+    - o_proj
+    - gate_proj
+    - up_proj
+    - down_proj
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+# QLoRA için Quantization
+quantization:
+  load_in_4bit: true
+  bnb_4bit_compute_dtype: "bfloat16"
+  bnb_4bit_use_double_quant: true
+  bnb_4bit_quant_type: "nf4"
+
+# Training Parametreleri
+training:
+  num_train_epochs: 3
+  per_device_train_batch_size: 4
+  per_device_eval_batch_size: 4
+  gradient_accumulation_steps: 4    # Effective batch = 4*4 = 16
+  learning_rate: 2.0e-4
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  max_grad_norm: 1.0
+
+  # Optimization
+  optim: "paged_adamw_8bit"
+  gradient_checkpointing: true
+  fp16: false
+  bf16: true                        # H200 için bfloat16
+
+  # Logging & Saving
+  logging_steps: 10
+  save_strategy: "steps"
+  save_steps: 100
+  save_total_limit: 3
+  evaluation_strategy: "steps"
+  eval_steps: 100
+
+  # Dataset
+  max_seq_length: 2048
+
+  # Distributed
+  ddp_find_unused_parameters: false
+
+# Veri Dosyaları
+data:
+  train_file: "data/splits/train.jsonl"
+  val_file: "data/splits/val.jsonl"
+  test_file: "data/splits/test.jsonl"
+
+# Vast.ai için özel ayarlar
+vast:
+  resume_from_checkpoint: true
+  auto_find_batch_size: true

@@ -1,0 +1,25 @@
+# API ve Veri İşleme
+openai>=1.12.0
+python-dotenv>=1.0.0
+datasets>=2.16.0
+pandas>=2.0.0
+numpy>=1.24.0
+tqdm>=4.66.0
+
+# Fine-tuning
+torch>=2.1.0
+transformers>=4.36.0
+peft>=0.7.0
+bitsandbytes>=0.41.0
+accelerate>=0.25.0
+trl>=0.7.0
+
+# Evaluation
+evaluate>=0.4.0
+rouge-score>=0.1.2
+sacrebleu>=2.3.1
+
+# Utilities
+pyyaml>=6.0
+jsonlines>=4.0.0
+rich>=13.0.0

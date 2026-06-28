@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python src/data_processing/process_data.py)",
+      "Bash(pip install *)",
+      "Bash(python -m json.tool)",
+      "Bash(python -c ' *)",
+      "Bash(cat)",
+      "Bash(python /tmp/analyze_data.py)",
+      "Bash(python ultra_simple_test.py)",
+      "Bash(python test_models.py)",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(python scripts/process_all_data.py)",
+      "Bash(python scripts/process_raw_data.py)",
+      "Bash(python scripts/validate_data.py)",
+      "Bash(python scripts/check_training_ready.py)"
+    ]
+  }
+}

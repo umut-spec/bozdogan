@@ -1,0 +1,49 @@
+*.pyc
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment variables
+.env
+
+# Data files (büyük olabilir, git'e eklemeyin)
+data/raw/*.json
+data/processed/*.jsonl
+data/splits/*.jsonl
+
+# Model checkpoints (çok büyük)
+models/
+*.pt
+*.pth
+*.bin
+*.safetensors
+
+# Logs
+*.log
+logs/
+tensorboard_logs/
+wandb/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary
+tmp/
+temp/
+*.tmp
