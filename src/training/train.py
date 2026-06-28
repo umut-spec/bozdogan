@@ -18,7 +18,7 @@ from transformers import (
     DataCollatorForLanguageModeling
 )
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training
-from trl import SFTTrainer
+from trl import SFTTrainer, SFTConfig
 
 
 class FineTuner:
@@ -134,8 +134,8 @@ class FineTuner:
         # 3. Dataset yükle
         dataset = self.load_datasets()
 
-        # 4. Training arguments
-        training_args = TrainingArguments(
+        # 4. Training arguments (SFTConfig - yeni TRL API)
+        training_args = SFTConfig(
             output_dir=self.output_dir,
             num_train_epochs=self.config['training']['num_train_epochs'],
             per_device_train_batch_size=self.config['training']['per_device_train_batch_size'],
@@ -150,7 +150,7 @@ class FineTuner:
             save_strategy=self.config['training']['save_strategy'],
             save_steps=self.config['training']['save_steps'],
             save_total_limit=self.config['training']['save_total_limit'],
-            evaluation_strategy=self.config['training']['evaluation_strategy'],
+            eval_strategy=self.config['training']['evaluation_strategy'],
             eval_steps=self.config['training']['eval_steps'],
             optim=self.config['training']['optim'],
             gradient_checkpointing=self.config['training']['gradient_checkpointing'],
@@ -160,6 +160,10 @@ class FineTuner:
             report_to=["tensorboard"],
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
+            # SFT-specific (yeni TRL API'de buraya taşındı)
+            max_seq_length=self.config['training']['max_seq_length'],
+            dataset_text_field="text",
+            packing=False,
         )
 
         # 5. Trainer
@@ -168,10 +172,6 @@ class FineTuner:
             args=training_args,
             train_dataset=dataset["train"],
             eval_dataset=dataset["validation"],
-            tokenizer=tokenizer,
-            dataset_text_field="text",  # JSONL'deki 'text' field'ı
-            max_seq_length=self.config['training']['max_seq_length'],
-            packing=False,  # Her örnek ayrı işlensin
         )
 
         print("\n🚀 Training başlıyor...\n")
