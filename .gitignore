@@ -20,7 +20,7 @@ ENV/
 # Data files (büyük olabilir, git'e eklemeyin)
 data/raw/*.json
 data/processed/*.jsonl
-data/splits/*.jsonl
+# data/splits/*.jsonl  # Eğitim için gerekli, git'e dahil edildi
 
 # Model checkpoints (çok büyük)
 models/
