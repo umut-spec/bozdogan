@@ -53,7 +53,7 @@ class FineTuner:
             quantization_config=bnb_config,
             device_map="auto",
             trust_remote_code=True,
-            torch_dtype=torch.bfloat16
+            dtype=torch.bfloat16
         )
 
         # Tokenizer yükle
