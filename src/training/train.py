@@ -161,8 +161,7 @@ class FineTuner:
             load_best_model_at_end=True,
             metric_for_best_model="eval_loss",
             # SFT-specific (yeni TRL API'de buraya taşındı)
-            max_seq_length=self.config['training']['max_seq_length'],
-            dataset_text_field="text",
+            max_length=self.config['training']['max_seq_length'],
             packing=False,
         )
 
