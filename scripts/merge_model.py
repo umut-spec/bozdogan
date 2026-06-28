@@ -12,7 +12,7 @@ if sys.platform == 'win32':
     sys.stdout.reconfigure(encoding='utf-8')
 
 BASE = "Qwen/Qwen2.5-7B-Instruct"
-ADAPTER = "models/bozdogan-identity"   # veya "UmutArchery/Bozdogan-7B"
+ADAPTER = "UmutArchery/Bozdogan-7B"   # HuggingFace'deki adapter (Colab silinince buradan çeker)
 OUTPUT = "models/bozdogan-merged"
 
 print("🦅 MERGE BAŞLIYOR")
