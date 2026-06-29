@@ -39,7 +39,7 @@ training:
 
   # Optimization
   optim: "paged_adamw_8bit"
-  gradient_checkpointing: true
+  gradient_checkpointing: false     # A100 40GB'de yer bol; kapatinca ~1.4x hiz (forward yeniden hesaplanmaz)
   fp16: false
   bf16: true                        # A100 bfloat16 destekler
 
