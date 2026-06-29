@@ -52,8 +52,8 @@ training:
   eval_steps: 50
 
   # Dataset
-  max_seq_length: 2048              # en uzun ornek ~1350 tok; 2048 packing hedefi, kirpma yok
-  packing: true                     # kisa ornekleri tek diziye paketle -> throughput ~4-5x, padding israfi yok
+  max_seq_length: 2048              # en uzun ornek ~1350 tok; kirpma yok
+  packing: false                    # FA2 olmadan packing capraz bulasma yapar; kapali tutuyoruz (dogru egitim)
 
   # Distributed
   ddp_find_unused_parameters: false
