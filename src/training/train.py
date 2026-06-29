@@ -35,20 +35,24 @@ class FineTuner:
         print("=" * 60)
 
     def load_model_and_tokenizer(self):
-        """Model ve tokenizer yükle (4-bit quantization ile)"""
+        """Model ve tokenizer yükle (4-bit QLoRA veya bf16 LoRA)"""
 
         print("\n📦 Model ve tokenizer yükleniyor...")
 
-        # Quantization config
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=self.config['quantization']['load_in_4bit'],
-            bnb_4bit_compute_dtype=getattr(torch, self.config['quantization']['bnb_4bit_compute_dtype']),
-            bnb_4bit_use_double_quant=self.config['quantization']['bnb_4bit_use_double_quant'],
-            bnb_4bit_quant_type=self.config['quantization']['bnb_4bit_quant_type']
-        )
+        use_4bit = self.config['quantization'].get('load_in_4bit', True)
 
-        # Model yükle
-        # attn_implementation config'den okunur (flash_attention_2 varsa hiz + packing guvenli)
+        # Quantization config (sadece 4-bit istenirse)
+        bnb_config = None
+        if use_4bit:
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_compute_dtype=getattr(torch, self.config['quantization']['bnb_4bit_compute_dtype']),
+                bnb_4bit_use_double_quant=self.config['quantization']['bnb_4bit_use_double_quant'],
+                bnb_4bit_quant_type=self.config['quantization']['bnb_4bit_quant_type']
+            )
+
+        # Model yükle. 80GB GPU'da bf16 LoRA (sikistirmasiz) cok daha hizli:
+        # 4-bit dequant yuku yok. attn_implementation config'den okunur.
         attn_impl = self.config['training'].get('attn_implementation', 'sdpa')
         model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
@@ -58,6 +62,7 @@ class FineTuner:
             dtype=torch.bfloat16,
             attn_implementation=attn_impl
         )
+        print(f"  Quantization: {'4-bit QLoRA' if use_4bit else 'bf16 LoRA (sikistirmasiz)'}")
         print(f"  Attention: {attn_impl}")
 
         # Tokenizer yükle
@@ -73,13 +78,17 @@ class FineTuner:
 
         model.config.pad_token_id = tokenizer.pad_token_id
 
-        # Model'i k-bit training için hazırla
+        # Model'i k-bit training için hazırla (sadece 4-bit'te gerekli).
         # NOT: prepare_model_for_kbit_training varsayilan olarak gradient checkpointing'i
         # ACAR ve config'i ezer. Config'deki ayara uy.
         use_gc = self.config['training'].get('gradient_checkpointing', True)
-        model = prepare_model_for_kbit_training(
-            model, use_gradient_checkpointing=use_gc
-        )
+        if use_4bit:
+            model = prepare_model_for_kbit_training(
+                model, use_gradient_checkpointing=use_gc
+            )
+        elif use_gc:
+            model.gradient_checkpointing_enable()
+            model.enable_input_require_grads()
 
         print("✓ Model ve tokenizer yüklendi")
         print(f"  Device: {next(model.parameters()).device}")

@@ -18,9 +18,9 @@ lora:
   bias: "none"
   task_type: "CAUSAL_LM"
 
-# QLoRA için Quantization
+# Quantization — A100 80GB'de KAPALI: bf16 LoRA cok daha hizli (4-bit dequant yuku yok)
 quantization:
-  load_in_4bit: true
+  load_in_4bit: false
   bnb_4bit_compute_dtype: "bfloat16"
   bnb_4bit_use_double_quant: true
   bnb_4bit_quant_type: "nf4"
@@ -53,8 +53,8 @@ training:
 
   # Dataset
   max_seq_length: 2048              # en uzun ornek ~1350 tok; kirpma yok
-  packing: true                     # FA2 acik -> capraz bulasma yok, kisa ornekleri paketle (612 -> ~210 adim)
-  attn_implementation: "flash_attention_2"   # FA2: hiz + bellek verimi + packing'i guvenli kilar
+  packing: false                    # FA2 yok -> packing capraz bulasma yapar; kapali (dogru egitim)
+  attn_implementation: "sdpa"       # bf16 LoRA ile SDPA hizli ve guvenli; FA2 derlemesine gerek yok
 
   # Distributed
   ddp_find_unused_parameters: false
