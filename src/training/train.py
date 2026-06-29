@@ -162,7 +162,7 @@ class FineTuner:
             metric_for_best_model="eval_loss",
             # SFT-specific (yeni TRL API'de buraya taşındı)
             max_length=self.config['training']['max_seq_length'],
-            packing=False,
+            packing=self.config['training'].get('packing', False),
         )
 
         # 5. Trainer

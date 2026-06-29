@@ -1,11 +1,11 @@
 # Model Konfigürasyonu
-model_name: "Qwen/Qwen2.5-7B-Instruct"
-output_dir: "./models/qwen-turkish-chat"
+model_name: "Qwen/Qwen2.5-14B-Instruct"
+output_dir: "./models/bozdogan-14b"
 
 # LoRA Parametreleri
 lora:
-  r: 16                    # LoRA rank (8, 16, 32)
-  lora_alpha: 32          # Alpha değeri (genelde r*2)
+  r: 32                    # A100'ü sömürüyoruz: daha yüksek rank = daha çok kapasite
+  lora_alpha: 64          # Alpha = r*2
   lora_dropout: 0.05
   target_modules:
     - q_proj
@@ -28,9 +28,9 @@ quantization:
 # Training Parametreleri
 training:
   num_train_epochs: 3
-  per_device_train_batch_size: 16   # H100 80GB için büyük batch
+  per_device_train_batch_size: 16   # veri kısa (avg ~420 tok) + packing -> A100 40GB rahat kaldırır
   per_device_eval_batch_size: 16
-  gradient_accumulation_steps: 1    # Effective batch = 16
+  gradient_accumulation_steps: 2    # Effective batch = 32
   learning_rate: 2.0e-4
   lr_scheduler_type: "cosine"
   warmup_ratio: 0.03
@@ -41,18 +41,19 @@ training:
   optim: "paged_adamw_8bit"
   gradient_checkpointing: true
   fp16: false
-  bf16: true                        # H200 için bfloat16
+  bf16: true                        # A100 bfloat16 destekler
 
   # Logging & Saving
   logging_steps: 10
   save_strategy: "steps"
-  save_steps: 100
+  save_steps: 50
   save_total_limit: 3
   evaluation_strategy: "steps"
-  eval_steps: 100
+  eval_steps: 50
 
   # Dataset
-  max_seq_length: 2048
+  max_seq_length: 2048              # en uzun ornek ~1350 tok; 2048 packing hedefi, kirpma yok
+  packing: true                     # kisa ornekleri tek diziye paketle -> throughput ~4-5x, padding israfi yok
 
   # Distributed
   ddp_find_unused_parameters: false
@@ -63,7 +64,7 @@ data:
   val_file: "data/splits/val.jsonl"
   test_file: "data/splits/test.jsonl"
 
-# Vast.ai için özel ayarlar
-vast:
+# Checkpoint / resume ayarları (Colab kopması ihtimaline karşı)
+runtime:
   resume_from_checkpoint: true
   auto_find_batch_size: true

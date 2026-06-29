@@ -12,20 +12,35 @@ from tqdm import tqdm
 
 
 class DataProcessor:
-    def __init__(self, input_file: str):
-        self.input_file = input_file
+    def __init__(self, input_files):
+        # Tek dosya da liste de kabul et
+        self.input_files = [input_files] if isinstance(input_files, str) else list(input_files)
         self.data = self._load_data()
 
     def _load_data(self) -> List[Dict]:
-        """Ham veriyi yükle"""
-        with open(self.input_file, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        """Bir veya birden çok ham dosyayı yükle, tek formata indirge ({"turns": [...]})."""
+        normalized = []
+        for path in self.input_files:
+            with open(path, 'r', encoding='utf-8') as f:
+                raw = json.load(f)
+            for item in raw:
+                # Yeni v2 formatı: {"turns": [{"role","content"}, ...]}
+                if isinstance(item, dict) and "turns" in item:
+                    normalized.append(item)
+                # Eski format: {"user": ..., "assistant": ...}
+                elif isinstance(item, dict) and "user" in item and "assistant" in item:
+                    normalized.append({"turns": [
+                        {"role": "user", "content": item["user"]},
+                        {"role": "assistant", "content": item["assistant"]},
+                    ]})
+            print(f"  yuklendi: {path}")
+        return normalized
 
     def clean_data(self) -> List[Dict]:
         """
-        Veriyi temizle ve filtrele
-        - Boş mesajları çıkar
-        - Çok kısa/uzun mesajları filtrele
+        Veriyi temizle ve filtrele (çok-turlu destekli)
+        - Boş/çok kısa/çok uzun turn'leri ele
+        - Rol sırası doğrulaması (user/assistant dönüşümlü)
         - Duplikatları temizle
         """
         cleaned = []
@@ -34,65 +49,77 @@ class DataProcessor:
         print("Veri temizleniyor...")
 
         for item in tqdm(self.data):
-            user_msg = item.get("user", "").strip()
-            assistant_msg = item.get("assistant", "").strip()
-
-            # Boş kontrolü
-            if not user_msg or not assistant_msg:
+            turns = item.get("turns", [])
+            if len(turns) < 2 or len(turns) % 2 != 0:
                 continue
 
-            # Uzunluk kontrolü
-            if len(user_msg) < 5 or len(assistant_msg) < 10:
+            valid = True
+            for idx, t in enumerate(turns):
+                expected = "user" if idx % 2 == 0 else "assistant"
+                content = (t.get("content") or "").strip()
+                if t.get("role") != expected:
+                    valid = False
+                    break
+                # Uzunluk kontrolü
+                if expected == "user" and not (5 <= len(content) <= 2000):
+                    valid = False
+                    break
+                if expected == "assistant" and not (10 <= len(content) <= 4000):
+                    valid = False
+                    break
+            if not valid:
                 continue
 
-            if len(user_msg) > 2000 or len(assistant_msg) > 4000:
-                continue
-
-            # Duplikat kontrolü
-            key = f"{user_msg}|{assistant_msg}"
+            # Duplikat kontrolü (tüm diyalog metni üzerinden)
+            key = "|".join((t.get("content") or "").strip() for t in turns)
             if key in seen:
                 continue
 
             seen.add(key)
-            cleaned.append({
-                "user": user_msg,
-                "assistant": assistant_msg
-            })
+            cleaned.append({"turns": [
+                {"role": t["role"], "content": t["content"].strip()} for t in turns
+            ]})
 
         print(f"[OK] Temizleme: {len(self.data)} -> {len(cleaned)} ornek")
         return cleaned
 
     def format_for_training(self, data: List[Dict], model_type: str = "qwen") -> List[Dict]:
         """
-        Modele uygun format'a çevir
+        Modele uygun format'a çevir (çok-turlu)
 
         Args:
-            data: Temiz veri
+            data: Temiz veri ({"turns": [...]})
             model_type: "qwen", "llama", "mistral"
         """
         formatted = []
 
         for item in data:
+            turns = item["turns"]
+
             if model_type == "qwen":
-                # Qwen2.5 chat template
-                text = f"<|im_start|>user\n{item['user']}<|im_end|>\n<|im_start|>assistant\n{item['assistant']}<|im_end|>"
+                parts = []
+                for t in turns:
+                    parts.append(f"<|im_start|>{t['role']}\n{t['content']}<|im_end|>")
+                text = "\n".join(parts)
 
             elif model_type == "llama":
-                # Llama 3 chat template
-                text = f"<|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\n{item['user']}<|eot_id|><|start_header_id|>assistant<|end_header_id|>\n\n{item['assistant']}<|eot_id|>"
+                parts = ["<|begin_of_text|>"]
+                for t in turns:
+                    parts.append(
+                        f"<|start_header_id|>{t['role']}<|end_header_id|>\n\n{t['content']}<|eot_id|>"
+                    )
+                text = "".join(parts)
 
-            elif model_type == "mistral":
-                # Mistral chat template
-                text = f"[INST] {item['user']} [/INST] {item['assistant']}"
-
-            else:
-                # Generic format
-                text = f"### User:\n{item['user']}\n\n### Assistant:\n{item['assistant']}"
+            else:  # generic
+                parts = []
+                for t in turns:
+                    label = "User" if t["role"] == "user" else "Assistant"
+                    parts.append(f"### {label}:\n{t['content']}")
+                text = "\n\n".join(parts)
 
             formatted.append({
                 "text": text,
-                "user": item["user"],
-                "assistant": item["assistant"]
+                "turns": turns,
             })
 
         return formatted
@@ -177,10 +204,13 @@ class DataProcessor:
 
 
 if __name__ == "__main__":
-    # Kullanım
-    processor = DataProcessor("data/raw/synthetic_data.json")
+    # A SEÇENEĞİ: sadece yüksek kaliteli v2 verisi (eski mode-collapse verisi hariç)
+    processor = DataProcessor([
+        "data/raw/synthetic_v2_ckpt_1300.json",   # en zengin v2 (7792)
+        "data/raw/synthetic_v2.json",             # ayrı v2 oturumu (3072)
+    ])
 
     processor.process_pipeline(
-        model_type="qwen",  # veya "llama", "mistral"
+        model_type="qwen",  # Qwen2.5-14B-Instruct (Bozdoğan) -> ChatML
         output_dir="data/splits"
     )

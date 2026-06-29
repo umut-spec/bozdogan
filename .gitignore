@@ -14,11 +14,17 @@ ENV/
 *.swp
 *.swo
 
-# Environment variables
+# Environment variables (gerçek key'ler — asla commit'leme)
 .env
+.env.local
+*.key
+
+# Claude Code yerel ayarları (kişisel izinler, token'lar)
+.claude/
 
 # Data files (büyük olabilir, git'e eklemeyin)
-data/raw/*.json
+# ham veri + arşiv (alt klasörler dahil) — repoya girmesin
+data/raw/
 data/processed/*.jsonl
 # data/splits/*.jsonl  # Eğitim için gerekli, git'e dahil edildi
 

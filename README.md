@@ -11,30 +11,29 @@ Gemini 3 Flash ile sentetik veri üretimi ve Türkçe chat modeli fine-tuning pr
 ```
 turkish-llm-finetuning/
 ├── data/
-│   ├── raw/                  # Ham sentetik veri (JSON checkpoints)
-│   ├── processed/            # Birleştirilmiş ve temizlenmiş veri
 │   └── splits/              # ✅ Train/val/test splits (READY!)
-│       ├── train.jsonl      # 9,531 örnekler
-│       ├── val.jsonl        # 529 örnekler
-│       └── test.jsonl       # 531 örnekler
+│       ├── train.jsonl      # 9,531 örnek
+│       ├── val.jsonl        # 529 örnek
+│       └── test.jsonl       # 531 örnek
 ├── src/
-│   ├── data_generation/     # Gemini API ile veri üretimi
+│   ├── data_generation/     # Sentetik veri üretimi
 │   ├── data_processing/     # Veri temizleme ve formatlama
-│   ├── training/            # Fine-tuning scriptleri
+│   ├── training/            # Fine-tuning kodu
 │   └── evaluation/          # Model değerlendirme
 ├── configs/
-│   ├── training_config.yaml     # Genel training config
-│   └── colab_config.yaml        # Colab için optimize edilmiş
+│   ├── training_config.yaml     # Training ayarları
+│   └── system_prompt.txt        # Bozdoğan sistem prompt'u
 ├── scripts/
 │   ├── process_raw_data.py      # Ham veriyi işle
 │   ├── validate_data.py         # Veri kalite kontrolü
 │   ├── check_training_ready.py  # Sistem hazırlık kontrolü
-│   ├── test_model.py            # Eğitilmiş modeli test et
+│   ├── train_identity.py        # Kimlik eğitimi
+│   ├── merge_model.py           # Adapter + base merge
+│   ├── chat_bozdogan.py         # Model ile sohbet
 │   └── colab_setup.py           # Colab hızlı kurulum
-├── notebooks/
-│   └── colab_training.ipynb     # 🚀 Colab training notebook
+├── docs/                    # Kurulum rehberleri (Vast.ai vb.)
 ├── TRAINING_GUIDE.md        # Detaylı eğitim rehberi
-├── COLAB_GUIDE.md          # Google Colab rehberi
+├── COLAB_GUIDE.md           # Google Colab rehberi
 └── README.md
 ```
 
@@ -49,7 +48,7 @@ turkish-llm-finetuning/
 !git clone YOUR_REPO_URL
 %cd turkish-llm-finetuning
 !python scripts/colab_setup.py
-!python src/training/train.py --config configs/colab_config.yaml
+!python src/training/train.py --config configs/training_config.yaml
 ```
 
 Detaylı rehber: [COLAB_GUIDE.md](COLAB_GUIDE.md)
