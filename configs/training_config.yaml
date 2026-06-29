@@ -36,7 +36,6 @@ training:
   warmup_ratio: 0.03
   weight_decay: 0.01
   max_grad_norm: 1.0
-  group_by_length: true             # benzer uzunluktaki ornekleri ayni batch'e koy -> padding israfini kes, ~2x hiz
 
   # Optimization
   optim: "paged_adamw_8bit"

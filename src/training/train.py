@@ -154,7 +154,6 @@ class FineTuner:
             eval_steps=self.config['training']['eval_steps'],
             optim=self.config['training']['optim'],
             gradient_checkpointing=self.config['training']['gradient_checkpointing'],
-            group_by_length=self.config['training'].get('group_by_length', False),
             fp16=self.config['training']['fp16'],
             bf16=self.config['training']['bf16'],
             ddp_find_unused_parameters=self.config['training']['ddp_find_unused_parameters'],
