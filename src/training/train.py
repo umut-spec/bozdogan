@@ -8,6 +8,10 @@ import sys
 import yaml
 import torch
 from pathlib import Path
+
+# A100'e ozel: tf32 matmul (~1.3x hiz, bedava, kaliteyi etkilemez)
+torch.backends.cuda.matmul.allow_tf32 = True
+torch.backends.cudnn.allow_tf32 = True
 from datasets import load_dataset
 from transformers import (
     AutoTokenizer,
@@ -172,6 +176,10 @@ class FineTuner:
             eval_steps=self.config['training']['eval_steps'],
             optim=self.config['training']['optim'],
             gradient_checkpointing=self.config['training']['gradient_checkpointing'],
+            gradient_checkpointing_kwargs={"use_reentrant": False},
+            dataloader_num_workers=self.config['training'].get('dataloader_num_workers', 4),
+            dataloader_pin_memory=True,
+            tf32=True,
             fp16=self.config['training']['fp16'],
             bf16=self.config['training']['bf16'],
             ddp_find_unused_parameters=self.config['training']['ddp_find_unused_parameters'],

@@ -40,6 +40,7 @@ training:
   # Optimization
   optim: "paged_adamw_8bit"
   gradient_checkpointing: true      # FA2+packing ile bile guvenli taraf; OOM olursa zaten acik
+  dataloader_num_workers: 4         # CPU veri yukleme bottleneck'ini kaldir
   fp16: false
   bf16: true                        # A100 bfloat16 destekler
 
