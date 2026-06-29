@@ -48,13 +48,17 @@ class FineTuner:
         )
 
         # Model yükle
+        # attn_implementation config'den okunur (flash_attention_2 varsa hiz + packing guvenli)
+        attn_impl = self.config['training'].get('attn_implementation', 'sdpa')
         model = AutoModelForCausalLM.from_pretrained(
             self.model_name,
             quantization_config=bnb_config,
             device_map="auto",
             trust_remote_code=True,
-            dtype=torch.bfloat16
+            dtype=torch.bfloat16,
+            attn_implementation=attn_impl
         )
+        print(f"  Attention: {attn_impl}")
 
         # Tokenizer yükle
         tokenizer = AutoTokenizer.from_pretrained(

@@ -39,7 +39,7 @@ training:
 
   # Optimization
   optim: "paged_adamw_8bit"
-  gradient_checkpointing: true      # batch 16 + 14B aktivasyonlari 80GB'i bile dolduruyor; acik kalmali
+  gradient_checkpointing: true      # FA2+packing ile bile guvenli taraf; OOM olursa zaten acik
   fp16: false
   bf16: true                        # A100 bfloat16 destekler
 
@@ -53,7 +53,8 @@ training:
 
   # Dataset
   max_seq_length: 2048              # en uzun ornek ~1350 tok; kirpma yok
-  packing: false                    # FA2 olmadan packing capraz bulasma yapar; kapali tutuyoruz (dogru egitim)
+  packing: true                     # FA2 acik -> capraz bulasma yok, kisa ornekleri paketle (612 -> ~210 adim)
+  attn_implementation: "flash_attention_2"   # FA2: hiz + bellek verimi + packing'i guvenli kilar
 
   # Distributed
   ddp_find_unused_parameters: false
