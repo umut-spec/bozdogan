@@ -70,7 +70,12 @@ class FineTuner:
         model.config.pad_token_id = tokenizer.pad_token_id
 
         # Model'i k-bit training için hazırla
-        model = prepare_model_for_kbit_training(model)
+        # NOT: prepare_model_for_kbit_training varsayilan olarak gradient checkpointing'i
+        # ACAR ve config'i ezer. Config'deki ayara uy.
+        use_gc = self.config['training'].get('gradient_checkpointing', True)
+        model = prepare_model_for_kbit_training(
+            model, use_gradient_checkpointing=use_gc
+        )
 
         print("✓ Model ve tokenizer yüklendi")
         print(f"  Device: {next(model.parameters()).device}")
