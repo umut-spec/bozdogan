@@ -27,8 +27,8 @@ quantization:
 
 # Training Parametreleri
 training:
-  num_train_epochs: 3
-  per_device_train_batch_size: 16   # veri kısa (avg ~420 tok) + packing -> A100 40GB rahat kaldırır
+  num_train_epochs: 2               # 10k veride LoRA icin 2 epoch yeterli; 3 hafif overfit + uzun
+  per_device_train_batch_size: 16   # veri kisa (avg ~420 tok), A100 40GB rahat kaldirir
   per_device_eval_batch_size: 16
   gradient_accumulation_steps: 2    # Effective batch = 32
   learning_rate: 2.0e-4
@@ -36,6 +36,7 @@ training:
   warmup_ratio: 0.03
   weight_decay: 0.01
   max_grad_norm: 1.0
+  group_by_length: true             # benzer uzunluktaki ornekleri ayni batch'e koy -> padding israfini kes, ~2x hiz
 
   # Optimization
   optim: "paged_adamw_8bit"
@@ -46,10 +47,10 @@ training:
   # Logging & Saving
   logging_steps: 10
   save_strategy: "steps"
-  save_steps: 50
+  save_steps: 100
   save_total_limit: 3
   evaluation_strategy: "steps"
-  eval_steps: 50
+  eval_steps: 100
 
   # Dataset
   max_seq_length: 2048              # en uzun ornek ~1350 tok; kirpma yok
